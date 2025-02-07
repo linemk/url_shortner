@@ -2,8 +2,12 @@ package main
 
 import (
 	"github.com/linemk/url_shortner/internal/config"
+	"github.com/linemk/url_shortner/internal/lib/logger/sl"
+	"github.com/linemk/url_shortner/internal/storage/sqlite"
 	"log/slog"
 	"os"
+
+	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -21,6 +25,14 @@ func main() {
 
 	log.Info("starting server", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
+
+	//инициализируем дб
+	storage, err := sqlite.New(cfg.StoragePath)
+	if err != nil {
+		log.Error("failed to init storage", sl.Err(err))
+		os.Exit(1)
+	}
+	router := chi.NewRouter()
 
 }
 
