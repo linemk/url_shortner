@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/fatih/color"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/linemk/url_shortner/internal/config"
@@ -23,6 +24,7 @@ func main() {
 	cfg := config.MustLoad()
 
 	// создаем логгер
+	color.NoColor = false
 	log := setupLogger(cfg.Env)
 
 	log.Info("starting server", slog.String("env", cfg.Env))
