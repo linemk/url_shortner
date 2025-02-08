@@ -1,16 +1,20 @@
 package main
 
 import (
-	"github.com/fatih/color"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"log/slog"
+	"net/http"
+	"os"
+
 	"github.com/linemk/url_shortner/internal/config"
+	"github.com/linemk/url_shortner/internal/http-server/handlers/url/save"
 	mvLogger "github.com/linemk/url_shortner/internal/http-server/middleware/logger"
 	"github.com/linemk/url_shortner/internal/lib/logger/handlers/slogpretty"
 	"github.com/linemk/url_shortner/internal/lib/logger/sl"
 	"github.com/linemk/url_shortner/internal/storage/sqlite"
-	"log/slog"
-	"os"
+
+	"github.com/fatih/color"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 const (
@@ -24,7 +28,6 @@ func main() {
 	cfg := config.MustLoad()
 
 	// создаем логгер
-	color.NoColor = false
 	log := setupLogger(cfg.Env)
 
 	log.Info("starting server", slog.String("env", cfg.Env))
@@ -44,11 +47,28 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	_ = storage
+	router.Post("/url", save.New(log, storage))
+
+	log.Info("starting server", slog.String("address", cfg.Address))
+
+	srv := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.HTTPServer.TimeOut,
+		WriteTimeout: cfg.HTTPServer.TimeOut,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server")
+	}
+
+	log.Info("shutting down server")
 }
 
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
+	color.NoColor = false
 
 	switch env {
 	case envLocal:
