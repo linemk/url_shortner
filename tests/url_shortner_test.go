@@ -111,7 +111,7 @@ func testRedirect(t *testing.T, alias string, urlToRedirect string) {
 	u := url.URL{
 		Scheme: "http",
 		Host:   host,
-		Path:   alias,
+		Path:   "url/" + alias, // Добавляем "url/"
 	}
 
 	redirectedToURL, err := api.GetRedirect(u.String())
